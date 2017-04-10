@@ -72,8 +72,9 @@ private:
     std::vector<std::vector<int64_t>> data_recent;
     std::vector<std::vector<int64_t>> instr_recent;
 
-    std::uniform_int_distribution<uint32_t> u = std::uniform_int_distribution<uint32_t>(0, 1048575);
-    std::default_random_engine e;
+    static std::uniform_int_distribution<uint32_t> u;
+    //
+    static std::default_random_engine e;
 
     Ui::MainWindow *ui;
 
@@ -82,7 +83,7 @@ private:
     std::string file_name;
     int64_t total_access_times;
     bool is_single;
-    bool is_processing;
+    bool is_processing;         // running
 
     int32_t instr_size;
     int32_t data_size;
@@ -97,11 +98,10 @@ private:
     int32_t data_read_miss;
     int32_t data_write_miss;
 
-    int8_t replace_strategy;
-    int8_t prefetch_strategy;
-    int8_t write_strategy;
-    int8_t write_miss_strategy;
-//    int8_t label;
+    int8_t replace_strategy;    // 0 1 2
+    int8_t prefetch_strategy;   // 0 1
+    int8_t write_strategy;      // 0 1
+    int8_t write_miss_strategy; // 0 1
 };
 
 #endif // MAINWINDOW_H
