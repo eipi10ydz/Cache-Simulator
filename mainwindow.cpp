@@ -32,7 +32,7 @@ bool MainWindow::read_from_file(const std::string &file_name)
     std::fstream f(file_name);
     if (!f.is_open())
     {
-        LOG_ERROR("file open error...");
+        LOG_ERROR("File Open ERROR");
         return false;
     }
     std::string tmp;
@@ -51,12 +51,11 @@ bool MainWindow::read_from_file(const std::string &file_name)
 
 int64_t MainWindow::to_real_address(int64_t line_size, int64_t addr)
 {
-    if (line_size <= 0)
-        return -1;
+    if (line_size <= 0) return -1;
     return addr / line_size * line_size;
 }
 
-bool MainWindow::check_first()
+bool MainWindow::check_first()  // init ui & members
 {
     if (!ui->lineEdit->isEnabled())
         return false;
@@ -69,21 +68,7 @@ bool MainWindow::check_first()
             is_processing = false;
             return true;
         }
-        ui->radioButton->setEnabled(false);
-        ui->radioButton_2->setEnabled(false);
-        ui->comboBox->setEnabled(false);
-        ui->comboBox_2->setEnabled(false);
-        ui->comboBox_3->setEnabled(false);
-        ui->comboBox_4->setEnabled(false);
-        ui->comboBox_5->setEnabled(false);
-        ui->comboBox_6->setEnabled(false);
-        ui->comboBox_7->setEnabled(false);
-        ui->comboBox_8->setEnabled(false);
-        ui->comboBox_9->setEnabled(false);
-        ui->pushButton->setEnabled(false);
-        ui->lineEdit->setEnabled(false);
 
-        is_processing = true;
         access_cnt = 0;
         total_access_times = 0;
         instr_fetch = 0;
@@ -105,6 +90,11 @@ bool MainWindow::check_first()
             data_size = SINGLE_DATA_CACHE[ui->comboBox->currentIndex()];
             data_group_size = data_size / line_size / associate;
             data_cache = std::vector<std::vector<int64_t>>(data_group_size, std::vector<int64_t>(associate, -1));
+            if(data_group_size == 0) {      // data_cache not suitable with line_size & associate
+                LOG_ERROR("cache size is too small");
+                is_processing = false;
+                return true;
+            }
         }
         else
         {
@@ -114,7 +104,27 @@ bool MainWindow::check_first()
             instr_group_size = instr_size / line_size / associate;
             data_cache = std::vector<std::vector<int64_t>>(data_group_size, std::vector<int64_t>(associate, -1));
             instr_cache = std::vector<std::vector<int64_t>>(instr_group_size, std::vector<int64_t>(associate, -1));
+            if(data_group_size == 0 || instr_group_size == 0) {     // data_cache not suitable with line_size & associate
+                LOG_ERROR("cache size is too small");
+                is_processing = false;
+                return true;
+            }
         }
+
+        ui->radioButton->setEnabled(false);
+        ui->radioButton_2->setEnabled(false);
+        ui->comboBox->setEnabled(false);
+        ui->comboBox_2->setEnabled(false);
+        ui->comboBox_3->setEnabled(false);
+        ui->comboBox_4->setEnabled(false);
+        ui->comboBox_5->setEnabled(false);
+        ui->comboBox_6->setEnabled(false);
+        ui->comboBox_7->setEnabled(false);
+        ui->comboBox_8->setEnabled(false);
+        ui->comboBox_9->setEnabled(false);
+        ui->pushButton->setEnabled(false);
+        ui->lineEdit->setEnabled(false);
+        is_processing = true;
 
         ui->lineEdit_2->setText("0");
         ui->lineEdit_3->setText("0");
@@ -361,23 +371,23 @@ void MainWindow::on_pushButton_clicked()
 void MainWindow::on_pushButton_2_clicked()
 {
     bool miss;
-    if (check_first() && is_processing)
+    if (check_first() && is_processing) // running for the first time
     {
         // cout << "type: " << access[access_cnt].first << " address: " << std::stoi(access[access_cnt].second, 0, 16) << endl;
         miss = process();
         switch(std::stoi(access[access_cnt].first))
         {
-            case READ_DATA:
+            case READ_DATA: // 0 read data
                 if (miss)
                     ++data_read_miss;
                 ++data_read;
                 break;
-            case WRITE_DATA:
+            case WRITE_DATA:    // 1 write data
                 if (miss)
                     ++data_write_miss;
                 ++data_write;
                 break;
-            case INSTRUCTION_FETCH:
+            case INSTRUCTION_FETCH: // 2 fetch instruction
                 if (miss)
                     ++instr_miss;
                 ++instr_fetch;
@@ -388,8 +398,6 @@ void MainWindow::on_pushButton_2_clicked()
     }
     else if (is_processing)
     {
-        // cout << "type: " << access[access_cnt].first << " address: " << std::stoi(access[access_cnt].second, 0, 16) << endl;
-        // cout << "data_group_size: " << data_group_size << endl;
         miss = process();
         switch(std::stoi(access[access_cnt].first))
         {
